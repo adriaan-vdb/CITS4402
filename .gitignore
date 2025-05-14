@@ -2,4 +2,4 @@
 
 Analysis/data/processed/
 Analysis/__pycache__/
-*.pyc
+*.pyc.DS_Store
