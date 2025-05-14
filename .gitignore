@@ -1,0 +1,4 @@
+.DS_Store
+
+Analysis/data/processed/
+Analysis/__pycache__/
