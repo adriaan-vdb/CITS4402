@@ -2,3 +2,4 @@
 
 Analysis/data/processed/
 Analysis/__pycache__/
+*.pyc
