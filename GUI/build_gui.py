@@ -2,7 +2,9 @@ from PyQt6.uic import loadUi
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMainWindow
 
-from sklearn import svm
+from sklearn.svm import SVC
+# from sklearn.model_selection import GridSearchCV
+# from sklearn.metrics import classification_report
 import pickle
 import os
 import numpy as np
@@ -33,7 +35,7 @@ class Build_gui(QMainWindow):
         self.swap=swapHandler(widget,self)
 
         ##Model stuff
-        self.model=svm.SVC()
+        self.model=SVC(C=10,kernel='rbf')
     
     def import_D(self):
         self.data=[]
@@ -48,10 +50,13 @@ class Build_gui(QMainWindow):
 
             
         self.Model_Fit.setEnabled(True)
+        self.CValSign.setEnabled(True)
+        self.CVal.setEnabled(True)
 
         print("Import Successful")
     
     def fit_M(self):
+        self.model=SVC(C=self.CVal.value(),kernel='rbf')
         self.model.fit(self.data,self.label)
         self.save_Model.setEnabled(True)
         self.Model_save.setEnabled(True)
