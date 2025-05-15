@@ -9,6 +9,8 @@ from sklearn.metrics import classification_report, accuracy_score
 import pickle
 import os
 import numpy as np
+import openpyxl
+from openpyxl.drawing.image import Image
 
 import sys
 sys.path.insert(1,"./CITS4401/GUI")
@@ -86,6 +88,22 @@ class Eval_gui(QMainWindow):
         pix=QPixmap(self.path[0])
         self.Image.setPixmap(pix)
         self.Image.show()
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet["A1"]="Predicted"
+        sheet["B1"]="Actual"
+        sheet["C1"]="Image"
+        sheet["D1"]="Path"
+        sheet.row_dimensions[1].height = 100
+        for i in range(len(self.q)):
+            sheet.row_dimensions[i+2].height = 100
+            sheet[f"A{i+2}"]=self.q[i]
+            sheet[f"B{i+2}"]=self.trueval[i]
+            img = Image(self.path[i])
+            sheet.add_image(img,f"C{i+2}")
+            sheet[f"D{i+2}"]=self.path[i]
+        workbook.save('output.xlsx')
+
         self.Model_Evaluate.setEnabled(True)
         self.Image_select.setEnabled(True)
         self.Image_select.setRange(0,len(self.testdata)-1)
