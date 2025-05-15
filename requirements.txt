@@ -1,0 +1,7 @@
+matplotlib==3.10.3
+numpy==2.2.5
+opencv_python==4.11.0.86
+PyQt6==6.9.0
+scikit_learn==1.6.1
+
+# Jupyter is also required to run the .ipynb notebook

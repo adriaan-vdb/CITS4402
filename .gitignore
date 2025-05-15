@@ -1,4 +1,6 @@
 .DS_Store
-
+Analysis/.DS_Store
+Analysis/data/.DS_Store
 Analysis/data/processed/
 Analysis/__pycache__/
+*.pyc
