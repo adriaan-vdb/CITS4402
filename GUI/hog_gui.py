@@ -1,4 +1,3 @@
-
 from PyQt6.uic import loadUi
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMainWindow
@@ -52,6 +51,18 @@ class HOG_gui(QMainWindow):
         # self.Select.addAction(exit_action)
         # # self.menuModelBuild.clicked.connect(self.toBuild)
         # # self.menuevaluate.clicked.connect(self.toEval)
+
+        self.nav_eval = QtWidgets.QPushButton("Go to Evaluate", self)
+        self.nav_eval.setGeometry(10, 500, 120, 30)
+        self.nav_eval.clicked.connect(lambda: widget.setCurrentIndex(0))
+
+        self.nav_build = QtWidgets.QPushButton("Go to Build", self)
+        self.nav_build.setGeometry(140, 500, 120, 30)
+        self.nav_build.clicked.connect(lambda: widget.setCurrentIndex(1))
+
+        self.nav_hog = QtWidgets.QPushButton("Go to HOG", self)
+        self.nav_hog.setGeometry(270, 500, 120, 30)
+        self.nav_hog.clicked.connect(lambda: widget.setCurrentIndex(2))
 
     def process(self):
         human_dir = "Analysis/data/processed/human"

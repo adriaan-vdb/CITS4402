@@ -1,4 +1,3 @@
-
 from PyQt6.uic import loadUi
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMainWindow
@@ -26,8 +25,8 @@ class Eval_gui(QMainWindow):
         loadUi("GUI/EvaluateWindow.ui",self)
         self.Model_Import.clicked.connect(self.import_M)
         self.Model_Evaluate.clicked.connect(self.evaluate_M)
-        self.Select_Test_Set.setPlainText("TestsetGUI")
-        self.Select_Model.setPlainText("model.pkl")
+        self.Select_Test_Set.setPlainText("Analysis/data/raw")
+        self.Select_Model.setPlainText("Analysis/svm_model.pkl")
         self.swap=swapHandler(widget,self)
 
         # exit_action = QAction('Exit', self)
@@ -38,6 +37,17 @@ class Eval_gui(QMainWindow):
         # # self.menuModelBuild.clicked.connect(self.toBuild)
         # # self.menuevaluate.clicked.connect(self.toEval)
 
+        self.nav_eval = QtWidgets.QPushButton("Go to Evaluate", self)
+        self.nav_eval.setGeometry(10, 500, 120, 30)
+        self.nav_eval.clicked.connect(lambda: widget.setCurrentIndex(0))
+
+        self.nav_build = QtWidgets.QPushButton("Go to Build", self)
+        self.nav_build.setGeometry(140, 500, 120, 30)
+        self.nav_build.clicked.connect(lambda: widget.setCurrentIndex(1))
+
+        self.nav_hog = QtWidgets.QPushButton("Go to HOG", self)
+        self.nav_hog.setGeometry(270, 500, 120, 30)
+        self.nav_hog.clicked.connect(lambda: widget.setCurrentIndex(2))
 
     
     def import_M(self):
