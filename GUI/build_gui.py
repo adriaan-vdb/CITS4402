@@ -5,7 +5,8 @@ from PyQt6.QtWidgets import QMainWindow
 from sklearn.svm import SVC
 # from sklearn.model_selection import GridSearchCV
 # from sklearn.metrics import classification_report
-import pickle
+# import pickle
+import joblib
 import os
 import numpy as np
 
@@ -30,7 +31,7 @@ class Build_gui(QMainWindow):
         self.Model_Fit.clicked.connect(self.fit_M)
         self.save_Model.clicked.connect(self.save_M)
         self.Model_save.setPlainText("model")
-        self.Select_Train_set.setPlainText("TrainsetGUI")
+        self.Select_Train_set.setPlainText("GUI/Output/TrainsetGUI")
         # self.Select_FALSE_set.setPlainText("notpeople")
         self.swap=swapHandler(widget,self)
 
@@ -75,4 +76,4 @@ class Build_gui(QMainWindow):
 
     def save_M(self):
         with open(self.Model_save.toPlainText()+".pkl",'wb') as f:
-            pickle.dump(self.model,f)
+            joblib.dump(self.model,f)

@@ -26,12 +26,12 @@ class HOG_gui(QMainWindow):
         super(HOG_gui,self).__init__()
         loadUi("GUI/HOGConfigWindow.ui",self)
         self.swap=swapHandler(widget,self)
-        filter=["sobel" , "scharr" , "prewitt" , "roberts" , "dog"]
+        # filter=["sobel" , "scharr" , "prewitt" , "roberts" , "dog"]
         block=["l2hys" , "l2" , "l1" , "none"]
-        colour=["gray" , "rgb" , "lab" , "ycrcb"]
-        self.FilterType.addItems(filter)
+        # colour=["gray" , "rgb" , "lab" , "ycrcb"]
+        # self.FilterType.addItems(filter)
         self.BlockNorm.addItems(block)
-        self.ColourSpace.addItems(colour)
+        # self.ColourSpace.addItems(colour)
         self.Process.clicked.connect(self.process)
         # self.FilterType.currentTextChanged.connect(self.Ufilter)
         # self.BlockNorm.currentTextChanged.connect(self.UBNorm)
@@ -104,9 +104,9 @@ class HOG_gui(QMainWindow):
         )   
         for i in range(len(labels_train)):
             # print
-            np.savetxt("TrainsetGUI/"+features[features_train[i]][1]+str(labels_train[i])+".txt", np.array(features[features_train[i]][0]), delimiter=',')
+            np.savetxt("GUI/Output/TrainsetGUI/"+features[features_train[i]][1]+str(labels_train[i])+".txt", np.array(features[features_train[i]][0]), delimiter=',')
         for i in range(len(labels_test)):
-            np.savetxt("TestsetGUI/"+features[features_test[i]][1]+str(labels_test[i])+".txt", np.array(features[features_test[i]][0]), delimiter=',')
+            np.savetxt("GUI/Output/TestsetGUI/"+features[features_test[i]][1]+str(labels_test[i])+".txt", np.array(features[features_test[i]][0]), delimiter=',')
     #     hogpipe.CONFIG.update(
     # # ── HOG core ────────────────────────────────────────────────────────────
     #         GRADIENT=self.FilterType.currentText(),      # sobel | scharr | prewitt | roberts | dog
@@ -148,11 +148,13 @@ class HOG_gui(QMainWindow):
         img = Image.open(img_path).convert("L").resize((64,128))
         img_np = np.array(img)
         
+        # hog_features = custom_hog(img_np, orientations=self.BinSize.value(), pixels_per_cell=(self.CellSize.value(), self.CellSize.value()),
+        #                         block_norm=self.BlockNorm.currentText(), transform_sqrt=True,
+        #                         feature_vector=True, unsigned=self.SignedorUnsigned.checkState(),
+        #                         gamma=self.Gamma.value(), gaussian_sigma=self.GaussianSigma.value())
         hog_features = custom_hog(img_np, orientations=self.BinSize.value(), pixels_per_cell=(self.CellSize.value(), self.CellSize.value()),
-                                block_norm=self.BlockNorm.currentText(), transform_sqrt=True,
-                                feature_vector=True, unsigned=self.SignedorUnsigned.checkState(), gradient=self.FilterType.currentText(),
-                                gamma=self.Gamma.value(), gaussian_sigma=self.GaussianSigma.value())
-
+                                block_norm=self.BlockNorm.currentText(), transform_sqrt=self.transform_sqrt.checkState(),
+                                feature_vector=True)
         # hog_features = hog(
         #     img_np,
         #     orientations=9,

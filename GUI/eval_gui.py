@@ -4,8 +4,11 @@ from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtGui import QPixmap
 
 from sklearn import svm
+import cv2
+from skimage.feature import hog
 from sklearn.metrics import classification_report, accuracy_score
-import pickle
+# import pickle
+import joblib
 import os
 import numpy as np
 import openpyxl
@@ -14,6 +17,38 @@ from openpyxl.drawing.image import Image
 import sys
 sys.path.insert(1,"./CITS4401/GUI")
 from GUI.swapHandler import swapHandler
+
+# HOG parameters (use the same ones as in training)
+hog_params = {
+    "orientations": 9,
+    "pixels_per_cell": (8, 8),
+    "cells_per_block": (2, 2),
+    "block_norm": 'L2-Hys'
+}
+
+# Function to preprocess the image with aspect ratio preservation
+def preprocess_image(image_path, target_size=(128, 64)):
+    # Load the image in grayscale
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise ValueError("Image not found or unable to read")
+    
+    # Get original dimensions
+    h, w = img.shape
+    
+    # Calculate scale factor to preserve aspect ratio
+    scale_factor = max(target_size[0] / h, target_size[1] / w)
+    
+    # Resize the image
+    new_h, new_w = int(h * scale_factor), int(w * scale_factor)
+    img_resized = cv2.resize(img, (new_w, new_h))
+
+    # Center-crop to target size (128, 64)
+    start_y = (new_h - target_size[0]) // 2
+    start_x = (new_w - target_size[1]) // 2
+    img_cropped = img_resized[start_y:start_y + target_size[0], start_x:start_x + target_size[1]]
+    
+    return img_cropped
 
 
 
@@ -25,8 +60,8 @@ class Eval_gui(QMainWindow):
         loadUi("GUI/EvaluateWindow.ui",self)
         self.Model_Import.clicked.connect(self.import_M)
         self.Model_Evaluate.clicked.connect(self.evaluate_M)
-        self.Select_Test_Set.setPlainText("Analysis/data/raw")
-        self.Select_Model.setPlainText("Analysis/svm_model.pkl")
+        self.Select_Test_Set.setPlainText("GUI/Examples")
+        self.Select_Model.setPlainText("GUI/Examples/svm_model.pkl")
         self.swap=swapHandler(widget,self)
 
         # exit_action = QAction('Exit', self)
@@ -53,7 +88,7 @@ class Eval_gui(QMainWindow):
     def import_M(self):
         self.Model_Import.setEnabled(False)
         with open(self.Select_Model.toPlainText(), 'rb') as f:
-            self.model = pickle.load(f)
+            self.model = joblib.load(f)
         
         self.testdata=[]
         self.trueval=[]
@@ -61,6 +96,7 @@ class Eval_gui(QMainWindow):
         Tnum=0
         Fnum=0
         for entry in os.scandir(self.Select_Test_Set.toPlainText()):
+            print(entry.name)
             if entry.name.endswith("1.txt") and Tnum<100:
                 self.testdata.append(np.loadtxt(entry.path, delimiter=',').flatten())
                 Tnum=Tnum+1 
@@ -71,6 +107,19 @@ class Eval_gui(QMainWindow):
                 Fnum=Fnum+1
                 self.trueval.append(0)
                 self.path.append("Analysis/data/processed/nonhuman/"+entry.name[:-5])
+            elif entry.name=="human":
+                self.processdir((self.Select_Test_Set.toPlainText()+"/human"),1)
+            elif entry.name=="nonhuman":
+                self.processdir((self.Select_Test_Set.toPlainText()+"/nonhuman"),0)
+            elif entry.name.endswith((".jpg", ".png", ".jpeg")) :
+                # Preprocess the image with aspect ratio preservation
+                img_padded = preprocess_image(entry.path)
+
+                # Extract HOG features
+                self.testdata.append(hog(img_padded, **hog_params))
+                self.trueval.append("unknown")
+                self.path.append(entry.path)
+
         
         self.Model_Evaluate.setEnabled(True)
         self.Model_Import.setEnabled(True)
@@ -93,7 +142,7 @@ class Eval_gui(QMainWindow):
         
         self.PRE_T.setText("Expected: "+str(self.trueval[0]))
         self.PRE_E.setText("Predicted: "+str(self.q[0]))
-        self.Acc.setText("Accuracy: "+str(accuracy_score(self.trueval, self.q)*100)+"%")
+        self.Acc.setText("Accuracy: "+str(round(accuracy_score(self.trueval, self.q)*100,2))+"%")
         self.Report.setPlainText(classification_report(self.trueval, self.q))
         pix=QPixmap(self.path[0])
         self.Image.setPixmap(pix)
@@ -124,3 +173,29 @@ class Eval_gui(QMainWindow):
         self.PRE_E.setText("Predicted: "+str(self.q[value]))
         pix=QPixmap(self.path[value])
         self.Image.setPixmap(pix)
+
+    def processdir(self,dir,val):
+        for entry in os.scandir(dir):
+                print(entry.name)
+                if entry.name.endswith("1.txt") and Tnum<100:
+                    self.testdata.append(np.loadtxt(entry.path, delimiter=',').flatten())
+                    Tnum=Tnum+1 
+                    self.trueval.append(1)
+                    self.path.append("Analysis/data/processed/human/"+entry.name[:-5])
+                elif entry.name.endswith("0.txt") and Fnum<100:
+                    self.testdata.append(np.loadtxt(entry.path, delimiter=',').flatten())
+                    Fnum=Fnum+1
+                    self.trueval.append(0)
+                    self.path.append("Analysis/data/processed/nonhuman/"+entry.name[:-5])
+                elif entry.name=="human":
+                    self.processdir((self.Select_Test_Set.toPlainText()+"/human"),1)
+                elif entry.name=="nonhuman":
+                    self.processdir((self.Select_Test_Set.toPlainText()+"/nonhuman"),0)
+                elif entry.name.endswith((".jpg", ".png", ".jpeg")):
+                    # Preprocess the image with aspect ratio preservation
+                    img_padded = preprocess_image(entry.path)
+
+                    # Extract HOG features
+                    self.testdata.append(hog(img_padded, **hog_params))
+                    self.trueval.append(val)
+                    self.path.append(entry.path)

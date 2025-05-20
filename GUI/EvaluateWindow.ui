@@ -33,7 +33,7 @@
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>../../../Pictures/c2p conversion/patrick.jpg</pixmap>
+     <pixmap></pixmap>
     </property>
    </widget>
    <widget class="QTextEdit" name="Select_Test_Set">
