@@ -6,6 +6,7 @@ from PyQt6.QtGui import QPixmap
 from sklearn import svm
 import cv2
 from skimage.feature import hog
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.metrics import classification_report, accuracy_score
 # import pickle
 import joblib
@@ -20,7 +21,7 @@ from GUI.swapHandler import swapHandler
 
 # HOG parameters (use the same ones as in training)
 hog_params = {
-    "orientations": 9,
+    "orientations": 18,
     "pixels_per_cell": (8, 8),
     "cells_per_block": (2, 2),
     "block_norm": 'L2-Hys'
@@ -49,6 +50,61 @@ def preprocess_image(image_path, target_size=(128, 64)):
     img_cropped = img_resized[start_y:start_y + target_size[0], start_x:start_x + target_size[1]]
     
     return img_cropped
+
+def compute_metrics(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    tn, fp, fn, tp = cm.ravel()
+
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred)
+    recall = recall_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+    miss_rate = 1 - recall
+    # fppw = fp / len(y_true)  # False positives per window
+
+    return {
+        "Accuracy": accuracy,
+        "Precision": precision,
+        "Recall": recall,
+        "F1 Score": f1,
+        "Miss Rate": miss_rate,
+        # "FPPW": fppw
+        "False Positives": fp,
+        "False Positive Rate": fp / (fp + tn)
+    }
+
+def evaluate_thresholds(y_true, decision_scores, thresholds):
+    results = []
+    for thresh in thresholds:
+        y_pred_thresh = (decision_scores >= thresh).astype(int)
+        tn, fp, fn, tp = confusion_matrix(y_true, y_pred_thresh).ravel()
+        fpr = fp / (fp + tn)
+        fnr = fn / (fn + tp)
+        results.append({
+            'threshold': thresh,
+            'FPR': fpr,
+            'FNR': fnr,
+        })
+    return results
+
+def evaluate_model(clf, X_test, y_test):
+
+    # Predict on test set
+    pred = clf.predict(X_test)
+
+    # Compute metrics
+    test_metrics = compute_metrics(y_test, pred)
+
+    # Get decision scores on test set
+    decision_scores = clf.decision_function(X_test)
+
+    # Define thresholds to sweep — e.g., between min and max scores
+    thresholds = np.linspace(decision_scores.min(), decision_scores.max(), 100)
+
+    # Evaluate FPR and FNR at each threshold
+    threshold_results = evaluate_thresholds(y_test, decision_scores, thresholds)
+
+    return pred,test_metrics, threshold_results
 
 
 
@@ -107,8 +163,8 @@ class Eval_gui(QMainWindow):
                 Fnum=Fnum+1
                 self.trueval.append(0)
                 self.path.append("Analysis/data/processed/nonhuman/"+entry.name[:-5])
-            elif entry.name=="human":
-                self.processdir((self.Select_Test_Set.toPlainText()+"/human"),1)
+            elif entry.name=="human" or entry.name=="human_resized":
+                self.processdir((self.Select_Test_Set.toPlainText()+f"/{entry.name}"),1)
             elif entry.name=="nonhuman":
                 self.processdir((self.Select_Test_Set.toPlainText()+"/nonhuman"),0)
             elif entry.name.endswith((".jpg", ".png", ".jpeg")) :
@@ -132,7 +188,8 @@ class Eval_gui(QMainWindow):
     def evaluate_M(self):
         self.Model_Evaluate.setEnabled(False)
         print("seems good")
-        self.q=self.model.predict(self.testdata)
+        # self.q=self.model.predict(self.testdata)
+        self.q,testmetrics,other=evaluate_model(self.model,self.testdata,self.trueval)
         # score=len(self.trueval)
         # for guess in range(0,score):
         #     score=score-(self.q[guess]+self.trueval[guess])%2
@@ -142,7 +199,7 @@ class Eval_gui(QMainWindow):
         
         self.PRE_T.setText("Expected: "+str(self.trueval[0]))
         self.PRE_E.setText("Predicted: "+str(self.q[0]))
-        self.Acc.setText("Accuracy: "+str(round(accuracy_score(self.trueval, self.q)*100,2))+"%")
+        self.Acc.setText("Accuracy: "+str(round(testmetrics["Accuracy"]*100,2))+"%")
         self.Report.setPlainText(classification_report(self.trueval, self.q))
         pix=QPixmap(self.path[0])
         self.Image.setPixmap(pix)
