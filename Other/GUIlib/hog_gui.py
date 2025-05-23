@@ -65,8 +65,8 @@ class HOG_gui(QMainWindow):
         self.nav_hog.clicked.connect(lambda: widget.setCurrentIndex(2))
 
     def process(self):
-        human_dir = "Other/data/processed/human_resized"
-        nonhuman_dir = "Other/data/processed/nonhuman"
+        human_dir = "Other/data/raw/human"
+        nonhuman_dir = "Other/data/raw/nonhuman"
 
         features = []
         labels = []
