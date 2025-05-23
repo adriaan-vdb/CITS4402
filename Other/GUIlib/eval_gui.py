@@ -220,7 +220,7 @@ class Eval_gui(QMainWindow):
             img = Image(self.path[i])
             sheet.add_image(img,f"C{i+2}")
             sheet[f"D{i+2}"]=self.path[i]
-        workbook.save('output.xlsx')
+        workbook.save('predictions.xlsx')
 
         self.Model_Evaluate.setEnabled(True)
         self.Image_select.setEnabled(True)
