@@ -65,8 +65,8 @@ class HOG_gui(QMainWindow):
         self.nav_hog.clicked.connect(lambda: widget.setCurrentIndex(2))
 
     def process(self):
-        human_dir = "Analysis/data/processed/human"
-        nonhuman_dir = "Analysis/data/processed/nonhuman"
+        human_dir = "Other/data/processed/human_resized"
+        nonhuman_dir = "Other/data/processed/nonhuman"
 
         features = []
         labels = []
@@ -104,9 +104,9 @@ class HOG_gui(QMainWindow):
         )   
         for i in range(len(labels_train)):
             # print
-            np.savetxt("GUI/Output/TrainsetGUI/"+features[features_train[i]][1]+str(labels_train[i])+".txt", np.array(features[features_train[i]][0]), delimiter=',')
+            np.savetxt("Other/GUIlib/Output/TrainsetGUI/"+features[features_train[i]][1]+str(labels_train[i])+".txt", np.array(features[features_train[i]][0]), delimiter=',')
         for i in range(len(labels_test)):
-            np.savetxt("GUI/Output/TestsetGUI/"+features[features_test[i]][1]+str(labels_test[i])+".txt", np.array(features[features_test[i]][0]), delimiter=',')
+            np.savetxt("Other/GUIlib/Output/TestsetGUI/"+features[features_test[i]][1]+str(labels_test[i])+".txt", np.array(features[features_test[i]][0]), delimiter=',')
     #     hogpipe.CONFIG.update(
     # # ── HOG core ────────────────────────────────────────────────────────────
     #         GRADIENT=self.FilterType.currentText(),      # sobel | scharr | prewitt | roberts | dog
