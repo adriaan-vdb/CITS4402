@@ -22,9 +22,9 @@ from Other.GUIlib.swapHandler import swapHandler
 # HOG parameters (use the same ones as in training)
 hog_params = {
     "orientations": 18,
-    "pixels_per_cell": (8, 8),
+    "pixels_per_cell": (16, 16),
     "cells_per_block": (2, 2),
-    "block_norm": 'L2-Hys'
+    "block_norm": 'L1-sqrt'
 }
 
 # Function to preprocess the image with aspect ratio preservation
