@@ -112,6 +112,7 @@ class Eval_gui(QMainWindow):
 
 
     def __init__(self,widget):
+        self.doeval=True
         super(Eval_gui,self).__init__()
         loadUi("Other/GUIlib/EvaluateWindow.ui",self)
         self.Model_Import.clicked.connect(self.import_M)
@@ -144,6 +145,7 @@ class Eval_gui(QMainWindow):
 
     
     def import_M(self):
+        self.doeval=True
         self.Model_Import.setEnabled(False)
         with open(self.Select_Model.toPlainText(), 'rb') as f:
             self.model = joblib.load(f)
@@ -170,6 +172,7 @@ class Eval_gui(QMainWindow):
             elif entry.name=="nonhuman":
                 self.processdir((self.Select_Test_Set.toPlainText()+"/nonhuman"),0)
             elif entry.name.endswith((".jpg", ".png", ".jpeg")) :
+                self.doeval=False
                 # Preprocess the image with aspect ratio preservation
                 img_padded = preprocess_image(entry.path)
 
@@ -190,19 +193,26 @@ class Eval_gui(QMainWindow):
     def evaluate_M(self):
         self.Model_Evaluate.setEnabled(False)
         print("seems good")
-        # self.q=self.model.predict(self.testdata)
-        self.q,testmetrics,other=evaluate_model(self.model,self.testdata,self.trueval)
+        if self.doeval:
+            self.q,testmetrics,other=evaluate_model(self.model,self.testdata,self.trueval)
+            self.Acc.setText("Accuracy: "+str(round(testmetrics["Accuracy"]*100,2))+"%")
+            self.Report.setPlainText(classification_report(self.trueval, self.q))
+        else:
+            self.q=self.model.predict(self.testdata)
+            self.Acc.setText("Accuracy: unknown")
+            self.Report.setPlainText("")
+        # self.q,testmetrics,other=evaluate_model(self.model,self.testdata,self.trueval)
         # score=len(self.trueval)
         # for guess in range(0,score):
         #     score=score-(self.q[guess]+self.trueval[guess])%2
         print("Test set evaluation:")
-        print(repr(classification_report(self.trueval, self.q)))
-        print(repr(accuracy_score(self.trueval, self.q)))
+        # print(repr(classification_report(self.trueval, self.q)))
+        # print(repr(accuracy_score(self.trueval, self.q)))
         
         self.PRE_T.setText("Expected: "+str(self.trueval[0]))
         self.PRE_E.setText("Predicted: "+str(self.q[0]))
-        self.Acc.setText("Accuracy: "+str(round(testmetrics["Accuracy"]*100,2))+"%")
-        self.Report.setPlainText(classification_report(self.trueval, self.q))
+        # self.Acc.setText("Accuracy: "+str(round(testmetrics["Accuracy"]*100,2))+"%")
+        # self.Report.setPlainText(classification_report(self.trueval, self.q))
         pix=QPixmap(self.path[0])
         self.Image.setPixmap(pix)
         self.Image.show()
