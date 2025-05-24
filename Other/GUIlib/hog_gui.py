@@ -56,8 +56,8 @@ class HOG_gui(QMainWindow):
     #C Make HOG's based on Images
     def process(self):
         #load in images
-        human_dir = "Other/data/raw/human"
-        nonhuman_dir = "Other/data/raw/nonhuman"
+        human_dir = "Other/data/processed/human_resized"
+        nonhuman_dir = "Other/data/processed/nonhuman"
 
         features = []
         labels = []
