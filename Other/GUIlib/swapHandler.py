@@ -1,6 +1,10 @@
+# Handles Swapping between pages of the GUI
+#GUI import
 from PyQt6.QtGui import QAction
+#File Location
 import sys
-sys.path.insert(1,"./CITS4401/Other/GUI")
+sys.path.insert(1,"./CITS4401/Other/GUIlib")
+
 class swapHandler():
     def __init__(self, widget,window):
         def toHOG(self):
@@ -17,7 +21,6 @@ class swapHandler():
         Eval_action.triggered.connect(toEval)
         
         
-        # self.menuHOGModify.clicked.connect(self.toHOG)
         window.Select.addAction(HOG_action)
         window.Select.addAction(Build_action)
         window.Select.addAction(Eval_action)

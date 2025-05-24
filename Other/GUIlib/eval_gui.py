@@ -1,22 +1,28 @@
-from PyQt6.uic import loadUi
-from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QMainWindow, QFileDialog
-from PyQt6.QtGui import QPixmap
+# The Main Page of the GUI used for importing models and test data to evaluate the model
 
+
+
+#Model train imports
 from sklearn import svm
 import cv2
 from skimage.feature import hog
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.metrics import classification_report, accuracy_score
-# import pickle
+
+#File modification and creation
 import joblib
 import os
 import numpy as np
+import sys
+sys.path.insert(1,"./CITS4401/Other/GUIlib")
+
+#GUI Imports
+from PyQt6.uic import loadUi
+from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import QMainWindow, QFileDialog
+from PyQt6.QtGui import QPixmap
 import openpyxl
 from openpyxl.drawing.image import Image
-
-import sys
-sys.path.insert(1,"./CITS4401/Other/GUI")
 from Other.GUIlib.swapHandler import swapHandler
 
 # HOG parameters (use the same ones as in training)
@@ -51,6 +57,7 @@ def preprocess_image(image_path, target_size=(128, 64)):
     
     return img_cropped
 
+# Function for Computing The metric used ot based on true and predicted values
 def compute_metrics(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     tn, fp, fn, tp = cm.ravel()
@@ -60,7 +67,6 @@ def compute_metrics(y_true, y_pred):
     recall = recall_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred)
     miss_rate = 1 - recall
-    # fppw = fp / len(y_true)  # False positives per window
 
     return {
         "Accuracy": accuracy,
@@ -68,11 +74,11 @@ def compute_metrics(y_true, y_pred):
         "Recall": recall,
         "F1 Score": f1,
         "Miss Rate": miss_rate,
-        # "FPPW": fppw
         "False Positives": fp,
         "False Positive Rate": fp / (fp + tn)
     }
 
+# For creating the DET Curve
 def evaluate_thresholds(y_true, decision_scores, thresholds):
     results = []
     for thresh in thresholds:
@@ -87,6 +93,7 @@ def evaluate_thresholds(y_true, decision_scores, thresholds):
         })
     return results
 
+# Steps taken to evaluate the 
 def evaluate_model(clf, X_test, y_test):
 
     # Predict on test set
@@ -121,16 +128,9 @@ class Eval_gui(QMainWindow):
         self.Select_Model.setPlainText("Test_Examples/svm_model.pkl")
         self.Select_Test_SetButton.clicked.connect(self.set_clicked)
         self.Select_ModelButton.clicked.connect(self.mod_clicked)
+        # Inititaiise menu bar
         self.swap=swapHandler(widget,self)
-
-        # exit_action = QAction('Exit', self)
-        # exit_action.triggered.connect(self.toHOG)
-
-        # # self.menuHOGModify.clicked.connect(self.toHOG)
-        # self.Select.addAction(exit_action)
-        # # self.menuModelBuild.clicked.connect(self.toBuild)
-        # # self.menuevaluate.clicked.connect(self.toEval)
-
+        # backup buttons in case a mac user does not see the menu bar (it's at the top of the screen)
         self.nav_eval = QtWidgets.QPushButton("Go to Evaluate", self)
         self.nav_eval.setGeometry(10, 500, 120, 30)
         self.nav_eval.clicked.connect(lambda: widget.setCurrentIndex(0))
@@ -143,7 +143,8 @@ class Eval_gui(QMainWindow):
         self.nav_hog.setGeometry(270, 500, 120, 30)
         self.nav_hog.clicked.connect(lambda: widget.setCurrentIndex(2))
 
-    
+    # Bound to import button
+    # Imports model and test set based on file path
     def import_M(self):
         self.doeval=True
         self.Model_Import.setEnabled(False)
@@ -153,10 +154,13 @@ class Eval_gui(QMainWindow):
         self.testdata=[]
         self.trueval=[]
         self.path=[]
+        # stores how many true and false values stores
         Tnum=0
         Fnum=0
+        # Scan each item in dir
         for entry in os.scandir(self.Select_Test_Set.toPlainText()):
             print(entry.name)
+            #For HOGs
             if entry.name.endswith("1.txt") and Tnum<100:
                 self.testdata.append(np.loadtxt(entry.path, delimiter=',').flatten())
                 Tnum=Tnum+1 
@@ -167,11 +171,13 @@ class Eval_gui(QMainWindow):
                 Fnum=Fnum+1
                 self.trueval.append(0)
                 self.path.append("Analysis/data/processed/nonhuman/"+entry.name[:-5])
+            # For Images
             elif entry.name=="human" or entry.name=="human_resized":
                 self.processdir((self.Select_Test_Set.toPlainText()+f"/{entry.name}"),1)
             elif entry.name=="nonhuman":
                 self.processdir((self.Select_Test_Set.toPlainText()+"/nonhuman"),0)
             elif entry.name.endswith((".jpg", ".png", ".jpeg")) :
+                #Can't estimate accuracy anymore
                 self.doeval=False
                 # Preprocess the image with aspect ratio preservation
                 img_padded = preprocess_image(entry.path)
@@ -190,10 +196,13 @@ class Eval_gui(QMainWindow):
         print(self.Select_Model.toPlainText())
         print(self.path)
     
+    # Bound to evaluate button
+    # Evaluates imported model based on imported test set
     def evaluate_M(self):
         self.Model_Evaluate.setEnabled(False)
         print("seems good")
         if self.doeval:
+            # Evaluate accuracy
             self.q,testmetrics,other=evaluate_model(self.model,self.testdata,self.trueval)
             self.Acc.setText("Accuracy: "+str(round(testmetrics["Accuracy"]*100,2))+"%")
             self.Report.setPlainText(classification_report(self.trueval, self.q))
@@ -201,21 +210,15 @@ class Eval_gui(QMainWindow):
             self.q=self.model.predict(self.testdata)
             self.Acc.setText("Accuracy: unknown")
             self.Report.setPlainText("")
-        # self.q,testmetrics,other=evaluate_model(self.model,self.testdata,self.trueval)
-        # score=len(self.trueval)
-        # for guess in range(0,score):
-        #     score=score-(self.q[guess]+self.trueval[guess])%2
-        print("Test set evaluation:")
-        # print(repr(classification_report(self.trueval, self.q)))
-        # print(repr(accuracy_score(self.trueval, self.q)))
-        
+
+        # Displaye predicted expected
         self.PRE_T.setText("Expected: "+str(self.trueval[0]))
         self.PRE_E.setText("Predicted: "+str(self.q[0]))
-        # self.Acc.setText("Accuracy: "+str(round(testmetrics["Accuracy"]*100,2))+"%")
-        # self.Report.setPlainText(classification_report(self.trueval, self.q))
+        # show Image
         pix=QPixmap(self.path[0])
         self.Image.setPixmap(pix)
         self.Image.show()
+        #Generate Output Excel doc
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         sheet["A1"]="Predicted"
@@ -237,12 +240,14 @@ class Eval_gui(QMainWindow):
         self.Image_select.setRange(0,len(self.testdata)-1)
         self.Image_select.valueChanged.connect(self.swapImage)
 
+    # Bound to spin down to swap between images
     def swapImage(self,value):
         self.PRE_T.setText("Expected: "+str(self.trueval[value]))
         self.PRE_E.setText("Predicted: "+str(self.q[value]))
         pix=QPixmap(self.path[value])
         self.Image.setPixmap(pix)
 
+    #recursive call for finding Images and HOG in subdir
     def processdir(self,dir,val):
         for entry in os.scandir(dir):
                 print(entry.name)
@@ -269,7 +274,7 @@ class Eval_gui(QMainWindow):
                     self.trueval.append(val)
                     self.path.append(entry.path)
     
-    #"All Files (*)"
+    #Opens test set file dialog
     def set_clicked(self):
       file_dialog = QFileDialog(self)
       file_dialog.setWindowTitle("Select Directory")
@@ -279,6 +284,7 @@ class Eval_gui(QMainWindow):
         selected_directory = file_dialog.selectedFiles()[0]
         self.Select_Test_Set.setPlainText(selected_directory)
     
+    #Opens model file dialog
     def mod_clicked(self):
       file_dialog = QFileDialog(self)
       file_dialog.setWindowTitle("Select Model")
