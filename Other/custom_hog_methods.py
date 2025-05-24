@@ -50,6 +50,7 @@ gradient (str):
         'prewitt' : Lighter, simpler filter.
         'roberts' : Focuses on diagonal edges.
         'dog'     : Multi-scale blob & edge detection (Difference of Gaussians).
+        'central_diff'
 
 gamma (float):
     - Gamma correction applied to input intensities.
@@ -77,6 +78,7 @@ hog_features = custom_hog(image_data, block_norm='l2hys', gamma=0.8, gaussian_si
 
 import cv2
 import numpy as np
+import math 
 
 # ---------------------- Gradient Filters ------------------------
 
@@ -122,12 +124,24 @@ def dog_grad(img, sigma1=1.0, sigma2=2.0):
     ang = cv2.phase(gx, gy, angleInDegrees=True)
     return mag, ang
 
+
+def central_diff_grad(img):
+    """Basic central difference gradient using [-1, 0, 1] filter"""
+    kernelx = np.array([[-1, 0, 1]], dtype=np.float32)
+    kernely = np.array([[-1], [0], [1]], dtype=np.float32)
+    gx = cv2.filter2D(img, cv2.CV_64F, kernelx)
+    gy = cv2.filter2D(img, cv2.CV_64F, kernely)
+    mag = cv2.addWeighted(gx, 0.5, gy, 0.5, 0)
+    ang = cv2.phase(gx, gy, angleInDegrees=True)
+    return mag, ang
+
 GRADIENT_FILTERS = {
     "sobel": sobel_grad,
     "scharr": scharr_grad,
     "prewitt": prewitt_grad,
     "roberts": roberts_grad,
     "dog": dog_grad,
+    "central_diff": central_diff_grad,
 }
 
 # ---------------------- HOG Descriptor ------------------------
@@ -204,12 +218,70 @@ class SimpleHOG:
         else:
             raise ValueError(f"Unknown block_norm '{self.block_norm}'. Choose from ['l2', 'l2hys', 'l1', 'none']")
 
+# ─── 1. NEW IMPORT ─────────────────────────────────────────────
+import math          # <-- place after the existing imports
+
+
+# ─── 2.  HOG VISUALISATION UTILITY ─────────────────────────────
+def render_hog_image(img, orientations=9, pixels_per_cell=(8, 8),
+                     unsigned=True, gradient='sobel', scale=4):
+    """
+    Returns an RGB image visualising the Histogram of Oriented Gradients.
+
+    • `scale`   enlarges every cell (`4` ≈ 32×32-px cell → 128×128-px area)
+    • Other parameters mirror `custom_hog` so you can reuse the same values.
+    """
+    # --- ensure greyscale ---------------------------------------------------
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img.copy()
+
+    # --- get gradients ------------------------------------------------------
+    mag, ang = GRADIENT_FILTERS[gradient.lower()](gray)
+    mag = np.abs(mag)
+    if unsigned:
+        ang %= 180.0
+
+    # --- normalise magnitude for drawing line length ------------------------
+    mag = (mag - mag.min()) / (np.ptp(mag) + 1e-10)
+
+    h, w = gray.shape
+    cell_h, cell_w = pixels_per_cell
+    angle_unit = 180 / orientations if unsigned else 360 / orientations
+    max_len = (min(cell_h, cell_w) / 2) * scale
+
+    vis = np.zeros((h * scale, w * scale, 3), dtype=np.uint8)
+
+    for y in range(0, h, cell_h):
+        for x in range(0, w, cell_w):
+            hist = np.zeros(orientations)
+            m_cell = mag[y:y+cell_h, x:x+cell_w]
+            a_cell = ang[y:y+cell_h, x:x+cell_w]
+
+            for i in range(cell_h):
+                for j in range(cell_w):
+                    idx = int(a_cell[i, j] // angle_unit) % orientations
+                    hist[idx] += m_cell[i, j]
+
+            cy = int((y + cell_h/2) * scale)
+            cx = int((x + cell_w/2) * scale)
+
+            for o, h_val in enumerate(hist):
+                if h_val == 0:
+                    continue
+                theta = (o * angle_unit + angle_unit / 2) * math.pi / 180.0
+                dx = int(max_len * h_val * math.cos(theta))
+                dy = int(max_len * h_val * math.sin(theta))
+                cv2.line(vis, (cx - dx, cy - dy), (cx + dx, cy + dy),
+                         (0, 255, 0), 1, cv2.LINE_AA)
+
+    return vis
+
+
 # ---------------------- Public API ------------------------
 
 def custom_hog(img, orientations=9, pixels_per_cell=(8, 8),
                block_norm='l2hys', transform_sqrt=False,
                feature_vector=True, unsigned=True, gradient='sobel',
-               gamma=1.0, gaussian_sigma=0.0):
+               gamma=1.0, gaussian_sigma=0.0, visualize=False):  
     img = img.astype(np.float32)
 
     # --- Gamma Correction ---
@@ -244,5 +316,8 @@ def custom_hog(img, orientations=9, pixels_per_cell=(8, 8),
     hog_vec = hog.extract()
     if feature_vector:
         hog_vec = hog_vec.ravel()
+    
+    hog_img = render_hog_image(img, orientations, pixels_per_cell,
+                            unsigned, gradient) if visualize else None
 
-    return hog_vec
+    return hog_vec, hog_img
