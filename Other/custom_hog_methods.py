@@ -19,6 +19,8 @@ pixels_per_cell (tuple of int):
     - Larger cells = more general, less sensitive to small edges.
     - Typical: (8, 8).
 
+Harde coded (2,2) cells per block
+
 block_norm (str):
     - Method to normalize gradient histograms per block.
     - Options:
