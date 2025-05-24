@@ -165,12 +165,12 @@ class Eval_gui(QMainWindow):
                 self.testdata.append(np.loadtxt(entry.path, delimiter=',').flatten())
                 Tnum=Tnum+1 
                 self.trueval.append(1)
-                self.path.append("Analysis/data/processed/human/"+entry.name[:-5])
+                self.path.append("Other/data/raw/human/"+entry.name[:-5])
             elif entry.name.endswith("0.txt") and Fnum<100:
                 self.testdata.append(np.loadtxt(entry.path, delimiter=',').flatten())
                 Fnum=Fnum+1
                 self.trueval.append(0)
-                self.path.append("Analysis/data/processed/nonhuman/"+entry.name[:-5])
+                self.path.append("Other/data/raw/nonhuman/"+entry.name[:-5])
             # For Images
             elif entry.name=="human" or entry.name=="human_resized":
                 self.processdir((self.Select_Test_Set.toPlainText()+f"/{entry.name}"),1)
