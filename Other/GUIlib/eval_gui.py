@@ -125,7 +125,7 @@ class Eval_gui(QMainWindow):
         self.Model_Import.clicked.connect(self.import_M)
         self.Model_Evaluate.clicked.connect(self.evaluate_M)
         self.Select_Test_Set.setPlainText("Test_Examples")
-        self.Select_Model.setPlainText("Test_Examples/svm_model.pkl")
+        self.Select_Model.setPlainText("Other/svm_model.pkl")
         self.Select_Test_SetButton.clicked.connect(self.set_clicked)
         self.Select_ModelButton.clicked.connect(self.mod_clicked)
         # Inititaiise menu bar

@@ -1,18 +1,25 @@
+# Gui for generating training and  test sets ogf HOG's to build and test models on
+
+
+#Model train imports
+from sklearn import svm
+from Other.custom_hog_methods import custom_hog
+# from skimage.feature import hog
+from sklearn.model_selection import train_test_split
+
+#File modification and creation
+import pickle
+import os
+import numpy as np
+import sys
+sys.path.insert(1,"./CITS4401/Other/GUIlib")
+
+#GUI Imports
+from Other.GUIlib.swapHandler import swapHandler
 from PyQt6.uic import loadUi
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtGui import QPixmap
-
-from sklearn import svm
-import pickle
-import os
-import numpy as np
-
-import sys
-sys.path.insert(1,"./CITS4401/Other/GUI")
-from Other.GUIlib.swapHandler import swapHandler
-# import importlib, ablation_HOG as hogpipe 
-from Other.custom_hog_methods import custom_hog
 from PIL import Image
 from sklearn.model_selection import train_test_split
 
