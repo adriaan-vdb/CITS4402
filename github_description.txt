@@ -1,0 +1,1 @@
+Advanced human detection using custom Histogram of Oriented Gradients (HOG) feature extraction and SVM classification, with a modular PyQt6 GUI for data processing, model training, evaluation, and ablation studies. 
