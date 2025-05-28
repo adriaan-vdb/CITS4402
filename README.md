@@ -31,11 +31,14 @@ The project is designed for research, experimentation, and educational use in co
 ---
 
 ## Features
-- **Customizable HOG extraction**: Multiple gradient filters (Sobel, Scharr, Prewitt, etc.), normalization, gamma correction, and visualization
-- **Flexible SVM training**: GUI-based model building, hyperparameter tuning, and model export
-- **Ablation study support**: Easily test the impact of different HOG and SVM parameters
-- **End-to-end GUI**: Import images, extract features, train models, and evaluate results visually
-- **Jupyter notebook**: For reproducible experiments and advanced analysis
+
+- **Customizable HOG extraction:** Multiple gradient filters (Sobel, Scharr, Prewitt, etc.), normalization, gamma correction, and visualization.
+- **Flexible SVM training:** GUI-based model building, hyperparameter tuning, and model export.
+- **Ablation study support:** Easily test the impact of different HOG and SVM parameters.
+- **End-to-end GUI:** Import images, extract features, train models, and evaluate results visually.
+- **Jupyter notebook:** For reproducible experiments and advanced analysis.
+- **Automated data preprocessing:** Resize, crop, deduplicate, and organize datasets with minimal manual intervention.
+- **Comprehensive evaluation metrics:** Accuracy, precision, recall, F1-score, and DET curve visualization.
 
 ---
 
